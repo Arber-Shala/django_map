@@ -1,0 +1,72 @@
+{% extends 'src/base.html' %}
+{% block content %}
+
+<div class="pageholder">
+    <div class="titleholder"> 
+        
+        <div class="title"> Geocoding template for {{location.name}} ({{label}})</div> 
+        
+    </div>
+
+
+    <div class="linkholder">
+            <table id="ourtable3" class="myTable m-3">
+                <thead>
+                    <tr>
+                        <th>Id</th>
+                        <th>Name</th>
+                        <th>Adress</th>
+                        <th>Zipcode</th>
+                        <th>City</th>
+                        <th>Country</th>
+                        <th>lat</th>
+                        <th>lng</th>
+                        <th>Place Id</th>
+                       
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    <tr>
+                        <td> {{location.id}} </td>
+                        <td> {{location.name}} </td>
+                        <td> {{location.adress}} </td>
+                        <td> {{location.zipcode}} </td>
+                        <td> {{location.city}} </td>
+                        <td> {{location.country}} </td>
+                        <td> {{lat}} </td>
+                        <td> {{lng}} </td>
+                        <td> {{place_id}} </td>
+
+                       
+                    </tr>
+
+
+                </tbody>
+
+                
+            </table>
+            <!-- Display JSON file Content -->
+            <div class="linkholder">
+                {{result}}
+            </div>
+            <div class="linkholder">
+                {{geometry}}
+            </div>
+            <div class="linkholder">
+                {{location1}}
+            </div>
+            <div class="linkholder">
+                {{latitude}}
+            </div>
+            <div class="linkholder">
+                {{longitude}}
+            </div>
+            <div class="linkholder">
+                {{place_id}}
+            </div>
+</div>
+
+
+{% endblock %}
