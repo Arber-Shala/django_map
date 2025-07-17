@@ -1,9 +1,11 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.views.generic import ListView
 from django.views import View
 from .models import *
+from .forms import *
 from django.conf import settings
 import googlemaps
+from datetime import datetime
 
 
 # Create your views here.
@@ -13,6 +15,70 @@ class HomeView(ListView):
     model = Locations
     #form_class = EmailForm
     success_url = "/"
+
+class DistanceView(View):
+    template_name = "src/distance.html"
+
+    def get(self, request):
+        form = DistanceForm
+        distances = Distances.objects.all()
+        context = {
+            'form':form,
+            'distances':distances
+        }
+        return render(request, self.template_name, context)
+    
+    def post(self, request):
+        form = DistanceForm(request.POST)
+        if form.is_valid():
+            print("it's valid")
+            from_location = form.cleaned_data['from_location'] # get info from the form
+            from_location_info = Locations.objects.get(name=from_location)
+            from_address_string = str(from_location_info.address) + ", " + str(from_location_info.zipcode) + ", " + str(from_location_info.city) + ", " + str(from_location_info.country)
+            
+            to_location = form.cleaned_data['to_location']
+            to_location_info = Locations.objects.get(name=to_location)
+            to_address_string = str(to_location_info.address) + ", " + str(to_location_info.zipcode) + ", " + str(to_location_info.city) + ", " + str(to_location_info.country) 
+
+            mode = form.cleaned_data['mode']
+
+            now = datetime.now() # get current data to get traffic time
+
+            # API call
+            gmaps = googlemaps.Client(key = settings.GOOGLE_API_KEY)
+
+            # output JSON dictionary of distance between two locations
+            calculate = gmaps.distance_matrix(
+                from_address_string,
+                to_address_string,
+                mode = mode,
+                departure_time = now
+            )
+            # access information from JSON dictaionry
+            duration_seconds = calculate['rows'][0]['elements'][0]['duration']['value']
+            duration_minutes = duration_seconds/60
+
+            distance_meters = calculate['rows'][0]['elements'][0]['distance']['value']
+            distance_kilometers = duration_seconds/1000
+
+            if('duration_in_traffic' in calculate['rows'][0]['elements'][0]):
+                duration_in_traffic_seconds =  calculate['rows'][0]['elements'][0]['duration_in_traffic']['value']
+                duration_in_traffic_minutes = duration_in_traffic_seconds/60
+            else:
+                duration_in_traffic_minutes = None
+            # save variables to a distances model
+            obj = Distances(
+                from_location = Locations.objects.get(name=from_location),
+                to_location = Locations.objects.get(name = to_location),
+                mode = mode,
+                distance_km = distance_kilometers,
+                duration_mins = duration_minutes,
+                duration_traffic_mins = duration_in_traffic_minutes,
+            )
+            obj.save()
+        else:
+            print(form.errors)
+        return redirect('my_distance_view')
 
 class GeocodingView(View):
     template_name = "src/geocoding.html"
